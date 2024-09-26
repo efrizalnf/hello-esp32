@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IOT</title>
+  </head>
+  <body>
+    <div>
+      <label for="">Suhu :</label>
+      <p><b id="suhu"></b> Celcius</p>
+      <label for="">Kelembapan :</label>
+      <p><b id="kelembapan"></b> %</p>
+    </div>
+    <div>
+      <button onclick="lampu('on')">nyala</button>
+      <button onclick="lampu('off')">mati</button>
+    </div>
+  </body>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script>
+    const clientId = "mqttjs_" + Math.random().toString(16).substr(2, 8);
+    const host = "wss://broker.emqx.io:8084/mqtt";
+
+    const options = {
+      keepalive: 30,
+      clientId,
+      protocolId: "MQTT",
+      protocolVersion: 4,
+      clean: true,
+      reconnectPeriod: 1000,
+      connectTimeout: 30 * 1000,
+    };
+
+    console.log("Connecting process to broker..");
+
+    const client = mqtt.connect(host, options);
+
+    client.on("connect", () => {
+      console.log("client connected:" + clientId);
+      client.subscribe("nusabot/#", { qos: 1 });
+      client.publish("topic", "wss secure connection demo...!", {
+        qos: 0,
+        retain: false,
+      });
+    });
+
+    client.on("message", (topic, message, packet) => {
+      if(topic === "nusabot/suhu"){
+            document.getElementById("suhu").innerHTML = message;
+      }else if (topic === "nusabot/kelembapan"){
+            document.getElementById("kelembapan").innerHTML = message;
+      }
+    });
+
+    function lampu(a){
+       if (a === 'on') {
+           client.publish("nusabot/lampu", "Lampu zlz Nyala");
+       } else if (a === 'off'){
+        client.publish("nusabot/lampu", "Lampu zlz Mati");
+       }
+    }
+  </script>
+</html>

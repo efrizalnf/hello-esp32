@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Data Sensor</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Label "Terhubung" -->
+    <div class="status">
+      <p id="status">Terputus</p>
+    </div>
+
+    <!-- Logo Nusabot -->
+    <header>
+      <img
+        src="https://nusabot.id/images/logo/logo-login.svg"
+        alt="Logo Nusabot"
+        class="logo"
+      />
+    </header>
+
+    <div class="container">
+      <div class="card">
+        <h2>Sensor Suhu</h2>
+        <p class="data"><b id="suhu">?</b>°C</p>
+      </div>
+      <div class="card">
+        <h2>Sensor Kelembaban</h2>
+        <p class="data"><b id="kelembapan">?</b>%</p>
+      </div>
+      <div class="card">
+        <h2>Kendalikan Lampu</h2>
+        <label class="switch">
+          <input type="checkbox" id="lamp-switch" onclick="lampu()"/>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <!-- Card baru untuk mengirim teks ke LCD -->
+      <div class="card">
+        <h2>Kirim Teks ke LCD</h2>
+        <input type="text" id="lcd-text" placeholder="Masukkan teks" />
+        <button id="send-btn">Kirim</button>
+      </div>
+    </div>
+
+    <!-- Tabel Status Koneksi -->
+    <div class="table-container">
+      <h2>Status Perangkat</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nomor Seri</th>
+            <th>Status Koneksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="seri">-</td>
+            <td><span class="connected">Terhubung</span></td>
+          </tr>
+          <tr>
+            <td>12346B</td>
+            <td><span class="disconnected">Terputus</span></td>
+          </tr>
+          <tr>
+            <td>12347C</td>
+            <td><span class="connected">Terhubung</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>&copy; 2024 Nusabot. All Rights Reserved.</p>
+    </footer>
+  </body>
+
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script>
+    const clientId = Math.random().toString(16).substr(2, 8);
+    const host = "wss://broker.emqx.io:8084/mqtt";
+
+    const options = {
+      keepalive: 30,
+      clientId: clientId,
+      protocolId: "MQTT",
+      protocolVersion: 4,
+      clean: true,
+      reconnectPeriod: 1000,
+      connectTimeout: 30 * 1000,
+    };
+
+    console.log("Menghubungkan ke Broker");
+    const client = mqtt.connect(host, options);
+
+    client.on("connect", () => {
+      const serino = document.getElementById("seri").innerHTML = clientId;
+      console.log("Terhubung ke broker:" + clientId);
+      const onConnected = client.subscribe("nusabot/#", { qos: 1 });
+      if(onConnected === true){
+        document.getElementById("status").innerHTML = "Terhubung";
+      } else {
+        document.getElementById("status").innerHTML = "Terputus";
+      }
+    });
+
+    client.on("message", (topic, message, packet) => {
+      if (topic === "nusabot/suhu") {
+        document.getElementById("suhu").innerHTML = message;
+      }
+      if (topic === "nusabot/kelembapan") {
+        document.getElementById("kelembapan").innerHTML = message;
+      }
+    });
+    function lampu() {
+      const lamp = document.getElementById("lamp-switch");
+      if (lamp.checked === true) {
+        client.publish("nusabot/lampu", "Lampu zlz Nyala");
+      } else {
+        client.publish("nusabot/lampu", "Lampu zlz Mati");
+      }
+    }
+  </script>
+</html>
