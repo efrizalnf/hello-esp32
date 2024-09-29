@@ -9,7 +9,7 @@
   <body>
     <!-- Label "Terhubung" -->
     <div class="status">
-      <p id="status">Terputus</p>
+      <p id="status"></p>
     </div>
 
     <!-- Logo Nusabot -->
@@ -33,15 +33,15 @@
       <div class="card">
         <h2>Kendalikan Lampu</h2>
         <label class="switch">
-          <input type="checkbox" id="lamp-switch" onclick="lampu()"/>
-          <span class="slider"></span>
+          <input type="checkbox" id="lamp-switch" onclick="lampu()" />
+          <span class="slider"></span></input>
         </label>
       </div>
       <!-- Card baru untuk mengirim teks ke LCD -->
       <div class="card">
         <h2>Kirim Teks ke LCD</h2>
         <input type="text" id="lcd-text" placeholder="Masukkan teks" />
-        <button id="send-btn">Kirim</button>
+        <button id="send-btn" onclick="sendText(this)">Kirim</button>
       </div>
     </div>
 
@@ -58,15 +58,7 @@
         <tbody>
           <tr>
             <td id="seri">-</td>
-            <td><span class="connected">Terhubung</span></td>
-          </tr>
-          <tr>
-            <td>12346B</td>
-            <td><span class="disconnected">Terputus</span></td>
-          </tr>
-          <tr>
-            <td>12347C</td>
-            <td><span class="connected">Terhubung</span></td>
+            <td id="connected"><span class="connected"></span></td>
           </tr>
         </tbody>
       </table>
@@ -82,7 +74,7 @@
   <script>
     const clientId = Math.random().toString(16).substr(2, 8);
     const host = "wss://broker.emqx.io:8084/mqtt";
-
+    
     const options = {
       keepalive: 30,
       clientId: clientId,
@@ -97,12 +89,14 @@
     const client = mqtt.connect(host, options);
 
     client.on("connect", () => {
-      const serino = document.getElementById("seri").innerHTML = clientId;
+      const serino = (document.getElementById("seri").innerHTML = clientId);
       console.log("Terhubung ke broker:" + clientId);
       const onConnected = client.subscribe("nusabot/#", { qos: 1 });
-      if(onConnected === true){
+      if (onConnected.connected = true){
+        document.getElementById("connected").innerHTML = "Terhubung";
         document.getElementById("status").innerHTML = "Terhubung";
       } else {
+        document.getElementById("connected").innerHTML = "Terputus";
         document.getElementById("status").innerHTML = "Terputus";
       }
     });
@@ -114,14 +108,35 @@
       if (topic === "nusabot/kelembapan") {
         document.getElementById("kelembapan").innerHTML = message;
       }
+      if (topic === "nusabot/textLCD") {
+        document.getElementById("lcd-text").value = message;
+      }
+      if (topic === "nusabot/lampu") {
+        const lampu = document.getElementById("lamp-switch");
+        var statusLampu = localStorage.getItem("statuslampu");
+      if (message.toString() === 'on') {
+          lampu.setAttribute("checked", "checked");
+          lampu.checked === true;
+          lampu.checked === 'checked';
+       } else if (message.toString() === 'off') {
+          lampu.setAttribute("checked", "");
+          lampu.removeAttribute("checked");
+          lampu.checked === false;
+       }
+      }
     });
     function lampu() {
       const lamp = document.getElementById("lamp-switch");
       if (lamp.checked === true) {
-        client.publish("nusabot/lampu", "Lampu zlz Nyala");
+        client.publish("nusabot/lampu", "on", { qos: 1, retain: true });
       } else {
-        client.publish("nusabot/lampu", "Lampu zlz Mati");
+        client.publish("nusabot/lampu", "off", { qos: 1, retain: false });
       }
+    }
+
+    function sendText() {
+      const txt = document.getElementById("lcd-text").value;
+      client.publish("nusabot/textLCD", txt, { qos: 1, retain: true });
     }
   </script>
 </html>

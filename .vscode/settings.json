@@ -1,10 +1,10 @@
 {
     "vsmqtt.brokerProfiles": [
         {
-            "name": "MQTT",
+            "name": "mqtt",
             "host": "broker.emqx.io",
             "port": 1883,
-            "clientId": "vsmqtt_client_3821"
+            "clientId": "vsmqtt_client_df44"
         }
     ]
 }
