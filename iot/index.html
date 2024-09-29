@@ -101,30 +101,24 @@
       }
     });
 
-    client.on("message", (topic, message, packet) => {
-      if (topic === "nusabot/suhu") {
-        document.getElementById("suhu").innerHTML = message;
-      }
-      if (topic === "nusabot/kelembapan") {
-        document.getElementById("kelembapan").innerHTML = message;
-      }
-      if (topic === "nusabot/textLCD") {
-        document.getElementById("lcd-text").value = message;
-      }
-      if (topic === "nusabot/lampu") {
-        const lampu = document.getElementById("lamp-switch");
-        var statusLampu = localStorage.getItem("statuslampu");
-      if (message.toString() === 'on') {
-          lampu.setAttribute("checked", "checked");
-          lampu.checked === true;
-          lampu.checked === 'checked';
-       } else if (message.toString() === 'off') {
-          lampu.setAttribute("checked", "");
-          lampu.removeAttribute("checked");
-          lampu.checked === false;
-       }
+    client.on("message", (topic, message) => {
+      switch (topic) {
+        case "nusabot/suhu":
+          document.getElementById("suhu").innerHTML = message;
+          break;
+        case "nusabot/kelembapan":
+          document.getElementById("kelembapan").innerHTML = message;
+          break;
+        case "nusabot/textLCD":
+          document.getElementById("lcd-text").value = message;
+          break;
+        case "nusabot/lampu":
+          const lampu = document.getElementById("lamp-switch");
+          lampu.checked = message.toString() === 'on';
+          break;
       }
     });
+    
     function lampu() {
       const lamp = document.getElementById("lamp-switch");
       if (lamp.checked === true) {
